@@ -73,13 +73,19 @@ def test_voxcpm2_runner_slices_decoded_waveform_with_decoder_chunk_size(monkeypa
     from nanovllm_voxcpm.models.voxcpm2.runner import VoxCPM2Payload, VoxCPM2Runner
 
     original_zeros = torch.zeros
+    original_tensor = torch.tensor
 
     def _cpu_zeros(*args, **kwargs):
         kwargs.pop("device", None)
         return original_zeros(*args, **kwargs)
 
+    def _cpu_tensor(*args, **kwargs):
+        kwargs.pop("pin_memory", None)
+        return original_tensor(*args, **kwargs)
+
     monkeypatch.setattr(torch.Tensor, "cuda", lambda self, non_blocking=True: self, raising=False)
     monkeypatch.setattr(torch, "zeros", _cpu_zeros)
+    monkeypatch.setattr(torch, "tensor", _cpu_tensor)
 
     runner = VoxCPM2Runner.__new__(VoxCPM2Runner)
     runner.patch_size = 4
